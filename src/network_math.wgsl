@@ -7,13 +7,13 @@ struct Matrix {
 };
 
 @group(0) @binding(0)
-var<storage, read> a: Matrix;
+var<storage, read> network_structure: Structure;
 
 @group(0) @binding(1)
-var<storage, read> b: Matrix;
+var<storage, read> inputs: Matrix;
 
 @group(0) @binding(2)
-var<storage, read_write> c: Matrix;
+var<storage, read_write> network_weight: Matrix;
 
 @compute @workgroup_size(8,8)
 fn main(@builtin(global_invocation_id) gid: vec3<u32>) {

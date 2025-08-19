@@ -19,7 +19,7 @@ fn main() {
     let (device, queue) = block_on(adapter.request_device(&Default::default())).unwrap();
     
 
-//BIND GROUP LAYOUT
+// BIND GROUP LAYOUT
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { 
         label: Some("Bind Group Layout"),
         entries: &[
@@ -61,7 +61,7 @@ fn main() {
 
 
 
-//BUFFERS
+// BUFFERS
 
 
     let structure_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -83,6 +83,8 @@ fn main() {
     });
 
 
+
+// BIND GROUP
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         label: Some("Network Bind Group"),
         layout: &bind_group_layout,
@@ -107,5 +109,38 @@ fn main() {
     let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
         label: Some("Network Command Encoder"),
     });
+
+
+    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { 
+        label: Some("Pipeline Layout"), 
+        bind_group_layouts: &[&bind_group_layout], 
+        push_constant_ranges: &[],
+    });
+
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { 
+        label: Some("Compute Shader"), 
+        source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("network_math.wgsl"))),
+    });
+
+    let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor { 
+        label: Some("Compute Pipeline"), 
+        layout: Some(&pipeline_layout), 
+        module: &shader, 
+        entry_point: Some("main"),
+        cache: None,
+        compilation_options: wgpu::PipelineCompilationOptions::default(),
+    });
+
+
+    let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+        label: Some("Compute Pass"),
+        timestamp_writes: None,
+    });
+
+    // drop the compute pass so the encoder is no longer borrowed and can be finished
+    // This might cause an issue
+    drop(compute_pass);
+
+    queue.submit(Some(encoder.finish()));
 
 }
